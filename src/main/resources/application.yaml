@@ -1,0 +1,21 @@
+
+spring:
+  application:
+    name: "financemanagement"
+  data:
+    mongodb:
+#      uri: mongodb://root:rootPassXXX@localhost:9000/core?retryWrites=true&w=majority
+      host: localhost
+      port: 27017
+      database: "core"
+#      username: "root"
+#      password: "rootPassXXX"
+      auto-index-creation: true
+  security:
+    user:
+      password: "12345"
+      name: user1
+server:
+  port: 8070
+
+#DEFAULT USER SPRING SECURITY USER DEFAULT PWD 5d6a9fbc-70f9-4342-856b-df9c81700995
