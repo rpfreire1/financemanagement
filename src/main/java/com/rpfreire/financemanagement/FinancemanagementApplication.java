@@ -21,39 +21,54 @@ public class FinancemanagementApplication {
 	}
 
 	@Bean
-	CommandLineRunner init(SecurityUserRepository securityUserRepository){
+	CommandLineRunner init(SecurityUserRepository userRepository) {
 		return args -> {
-			Permission createPermission= Permission.builder()
+			/* Create PERMISSIONS */
+			Permission createPermission = Permission.builder()
 					.name("CREATE")
-					.description("Can create objects")
 					.build();
-			Permission readPermission= Permission.builder()
+
+			Permission readPermission = Permission.builder()
 					.name("READ")
-					.description("Can read objects")
 					.build();
-			Permission modifyPermission= Permission.builder()
-					.name("MODIFY")
-					.description("Can modify objects")
+
+			Permission updatePermission = Permission.builder()
+					.name("UPDATE")
 					.build();
-			Permission deletePermission= Permission.builder()
+
+			Permission deletePermission = Permission.builder()
 					.name("DELETE")
-					.description("Can delete objects")
 					.build();
+
+			Permission refactorPermission = Permission.builder()
+					.name("REFACTOR")
+					.build();
+
+			/* Create ROLES */
 			Role roleAdmin = Role.builder()
 					.roleEnum(RoleEnum.ADMIN)
-					.permissions(Set.of(createPermission, readPermission, deletePermission))
+					.permissions (Set.of(createPermission, readPermission, updatePermission, deletePermission))
 					.build();
-			Role roleSupervisor = Role.builder()
+
+			Role roleUser = Role.builder()
 					.roleEnum(RoleEnum.USER)
-					.permissions(Set.of( readPermission))
+					.permissions(Set.of(createPermission, readPermission))
 					.build();
 
+			Role roleInvited = Role.builder()
+					.roleEnum(RoleEnum.INVITED)
+					.permissions(Set.of(readPermission))
+					.build();
 
+			Role roleDeveloper = Role.builder()
+					.roleEnum(RoleEnum.DEVELOPER)
+					.permissions(Set.of(createPermission, readPermission, updatePermission, deletePermission, refactorPermission))
+					.build();
 
-			SecurityUser securityUser=SecurityUser.builder()
-//					.id("ppspspspspspsps")
-					.username("rfreire")
-					.password("123581321a")
+			/* CREATE USERS */
+			SecurityUser userSantiago = SecurityUser.builder()
+					.username("santiago")
+					.password("$2a$10$cMY29RPYoIHMJSuwRfoD3eQxU1J5Rww4VnNOUOAEPqCBshkNfrEf6")
 					.isEnabled(true)
 					.accountNoExpired(true)
 					.accountNoLocked(true)
@@ -61,8 +76,37 @@ public class FinancemanagementApplication {
 					.roles(Set.of(roleAdmin))
 					.build();
 
-			securityUserRepository.save(securityUser);
-		};
+			SecurityUser userDaniel = SecurityUser.builder()
+					.username("daniel")
+					.password("$2a$10$cMY29RPYoIHMJSuwRfoD3eQxU1J5Rww4VnNOUOAEPqCBshkNfrEf6")
+					.isEnabled(true)
+					.accountNoExpired(true)
+					.accountNoLocked(true)
+					.credentialNoExpired(true)
+					.roles(Set.of(roleUser))
+					.build();
 
+			SecurityUser userAndrea = SecurityUser.builder()
+					.username("andrea")
+					.password("$2a$10$cMY29RPYoIHMJSuwRfoD3eQxU1J5Rww4VnNOUOAEPqCBshkNfrEf6")
+					.isEnabled(true)
+					.accountNoExpired(true)
+					.accountNoLocked(true)
+					.credentialNoExpired(true)
+					.roles(Set.of(roleInvited))
+					.build();
+
+			SecurityUser userAnyi = SecurityUser.builder()
+					.username("anyi")
+					.password("$2a$10$cMY29RPYoIHMJSuwRfoD3eQxU1J5Rww4VnNOUOAEPqCBshkNfrEf6")
+					.isEnabled(true)
+					.accountNoExpired(true)
+					.accountNoLocked(true)
+					.credentialNoExpired(true)
+					.roles(Set.of(roleDeveloper))
+					.build();
+
+			userRepository.saveAll(List.of(userSantiago, userDaniel, userAndrea, userAnyi));
+		};
 	}
 }

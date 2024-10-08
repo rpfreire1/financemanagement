@@ -1,5 +1,6 @@
 package com.rpfreire.financemanagement.security.config;
 
+import com.rpfreire.financemanagement.security.service.impl.SecurityUserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -29,66 +31,50 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-//     @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-//         return httpSecurity
-//                 .csrf(csrf->csrf.disable())
-//                 .httpBasic(Customizer.withDefaults())
-//                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                 .authorizeHttpRequests(http->{
-//                     http.requestMatchers(HttpMethod.GET,"auth/hello").permitAll();
-//                     http.requestMatchers(HttpMethod.GET,"auth/hello-secured").hasAuthority("READ");
-//                     http.anyRequest().denyAll();//authenticated
-//
-//                         }
-//
-//                 )
-//                 .build();
-//    }
-@Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-    return httpSecurity
-            .csrf(csrf->csrf.disable())
-            .httpBasic(Customizer.withDefaults())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .build();
-}
     @Bean
-    public AuthenticationManager authenticationManager (AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+                .csrf(csrf -> csrf.disable())
+                .httpBasic(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(http -> {
+                    // Configurar los endpoints publicos
+                    http.requestMatchers(HttpMethod.GET, "/auth/get").permitAll();
+
+                    // Cofnigurar los endpoints privados
+                    http.requestMatchers(HttpMethod.POST, "/auth/post").hasAnyRole("ADMIN", "DEVELOPER");
+                    http.requestMatchers(HttpMethod.PATCH, "/auth/patch").hasAnyAuthority("REFACTOR");
+
+                    // Configurar el resto de endpoint - NO ESPECIFICADOS
+                    http.anyRequest().denyAll();
+                })
+                .build();
+    }
+
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+//        return httpSecurity
+//                .csrf(csrf -> csrf.disable())
+//                .httpBasic(Customizer.withDefaults())
+//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .build();
+//    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
+
     @Bean
-    public AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider provider=new DaoAuthenticationProvider();
+    public AuthenticationProvider authenticationProvider(SecurityUserServiceImpl userDetailService){
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(userDetailsService());
+        provider.setUserDetailsService(userDetailService);
+        return provider;
+    }
 
-        return provider ;
-     }
-
-     @Bean
+    @Bean
     public PasswordEncoder passwordEncoder(){
-         return NoOpPasswordEncoder.getInstance();
-     }
-     @Bean
-     public UserDetailsService userDetailsService(){
-         List<UserDetails>userDetailsList=new ArrayList<>();
-         userDetailsList.add(
-                 User.withUsername("rfreire")
-                         .password("12345")
-                         .roles("ADM")
-                         .authorities("READ","CREATE")
-                         .build()
-
-         );
-         userDetailsList.add(
-                 User.withUsername("aona")
-                         .password("12345")
-                         .roles("DEV")
-                         .authorities("READ")
-                         .build()
-
-         );
-         return new InMemoryUserDetailsManager(userDetailsList);
-     }
+        return new BCryptPasswordEncoder();
+    }
 }

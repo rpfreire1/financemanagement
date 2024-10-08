@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class SecurityUserServiceImpl implements ISecurityUserService {
+public class SecurityUserServiceImpl   implements ISecurityUserService, UserDetailsService{
     @Autowired
     private SecurityUserRepository securityUserRepository;
 
@@ -23,15 +24,18 @@ public class SecurityUserServiceImpl implements ISecurityUserService {
         SecurityUser securityUser=securityUserRepository.findSecurityUserByUsername(username)
                 .orElseThrow(()->new UsernameNotFoundException("El usuario "+username+" no existe. "));
         List<SimpleGrantedAuthority> authorityList=new ArrayList<>();
-        securityUser.getRoles().forEach(role -> authorityList.add(new SimpleGrantedAuthority("ROLE_".concat(role.getRoleEnum().name()))));
-        securityUser.getRoles().stream().flatMap(role -> role.getPermissions().stream()).forEach(permission -> authorityList.add(new SimpleGrantedAuthority(permission.getName())));
-        return null;
-//                new User(securityUser.getUsername()
-//        ,securityUser.getPassword()
-//        ,securityUser.getIsEnabled()
-//        ,securityUser.getAccountNoExpired()
-//        ,securityUser.getAccountNoLocked()
-//        ,authorityList) { 
-//        };
+        securityUser.getRoles().forEach(role -> authorityList.add(
+                new SimpleGrantedAuthority("ROLE_".concat(role.getRoleEnum().name()))));
+        securityUser.getRoles().stream().flatMap(
+                role -> role.getPermissions().stream()).forEach(
+                        permission -> authorityList.add(new SimpleGrantedAuthority(permission.getName())));
+        return new User(securityUser.getUsername()
+        ,securityUser.getPassword()
+        ,securityUser.getIsEnabled()
+        ,securityUser.getAccountNoExpired()
+        ,securityUser.getCredentialNoExpired()
+        ,securityUser.getAccountNoLocked()
+        ,authorityList) {
+        };
     }
 }
